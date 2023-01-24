@@ -13,26 +13,15 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.physics.bullet.Bullet;
-import com.badlogic.gdx.physics.bullet.DebugDrawer;
-import com.badlogic.gdx.physics.bullet.collision.btAxisSweep3;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
-import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
-import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
-import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
-import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
-import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.github.xpenatan.vehicle.imgui.ImGuiRenderer;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
@@ -61,20 +50,12 @@ public class MainClass extends ApplicationAdapter {
 
     private Texture brdfLUT;
 
-    private btDiscreteDynamicsWorld world;
-    private btDefaultCollisionConfiguration collisionConfiguration;
-    private btCollisionDispatcher dispatcher;
-    private btBroadphaseInterface broadphase;
-    private btSequentialImpulseConstraintSolver solver;
-    private DebugDrawer debugDrawer;
-
     private btRigidBody groundBody;
 
     private Vehicle vehicle;
 
+    private BulletWorld bulletWorld = new BulletWorld();
     private ImGuiRenderer imGuiRenderer;
-
-    public boolean worldDebug = false;
 
     public MainClass() {
     }
@@ -85,10 +66,27 @@ public class MainClass extends ApplicationAdapter {
 
     @Override
     public void create() {
-        Bullet.init();
+        bulletWorld.init();
+
         if(imGuiRenderer != null) {
             imGuiRenderer.init();
         }
+        initSceneManager();
+        initCamera();
+
+        if(imGuiRenderer != null) {
+            Gdx.input.setInputProcessor(new InputMultiplexer(imGuiRenderer.getInput(), cameraControl));
+        }
+        else {
+            Gdx.input.setInputProcessor(new InputMultiplexer(cameraControl));
+        }
+
+        createGround();
+        vehicle = new Vehicle();
+        vehicle.createModel(bulletWorld.getWorld(), sceneManager);
+    }
+
+    private void initSceneManager() {
         sceneManager = new SceneManager();
 
         DirectionalShadowLight defaultLight = new DirectionalShadowLight();
@@ -113,9 +111,9 @@ public class MainClass extends ApplicationAdapter {
         sceneManager.environment.set(PBRCubemapAttribute.createSpecularEnv(specularCubemap));
         sceneManager.setSkyBox(skybox = new SceneSkybox(environmentCubemap));
         sceneManager.setAmbientLight(1f);
+    }
 
-        sceneManager.setEnvironmentRotation(180);
-
+    private void initCamera() {
         camera = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.far = 1000f;
         camera.position.y = 18;
@@ -127,21 +125,7 @@ public class MainClass extends ApplicationAdapter {
                 return false;
             }
         };
-
         sceneManager.setCamera(camera);
-
-        if(imGuiRenderer != null) {
-            Gdx.input.setInputProcessor(new InputMultiplexer(imGuiRenderer.getInput(), cameraControl));
-        }
-        else {
-            Gdx.input.setInputProcessor(new InputMultiplexer(cameraControl));
-        }
-
-        initBulletWorld();
-        createGround();
-
-        vehicle = new Vehicle();
-        vehicle.createModel(world, sceneManager);
     }
 
     private void createGround() {
@@ -174,29 +158,7 @@ public class MainClass extends ApplicationAdapter {
         btBoxShape shape = new btBoxShape(size);
         groundBody = new btRigidBody(0, motionState, shape);
         groundBody.setFriction(1f);
-        world.addRigidBody(groundBody);
-    }
-
-    private void initBulletWorld() {
-        collisionConfiguration = new btDefaultCollisionConfiguration();
-        dispatcher = new btCollisionDispatcher(collisionConfiguration);
-
-        Vector3 worldAabbMin = new Vector3(-1000,-1000,-1000);
-        Vector3 worldAabbMax = new Vector3(1000,1000,1000);
-        int maxProxies = 1024;
-        btAxisSweep3 b = new btAxisSweep3(worldAabbMin, worldAabbMax, maxProxies);
-        broadphase = b;
-        solver = new btSequentialImpulseConstraintSolver();
-        world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-
-        int debugFlags = btIDebugDraw.DebugDrawModes.DBG_MAX_DEBUG_DRAW_MODE |
-            btIDebugDraw.DebugDrawModes.DBG_DrawConstraints |
-            btIDebugDraw.DebugDrawModes.DBG_DrawConstraintLimits;
-        debugDrawer = new DebugDrawer();
-        world.setDebugDrawer(debugDrawer);
-        debugDrawer.setDebugMode(debugFlags);
-
-        world.setGravity(new Vector3(0, -9.8f, 0));
+        bulletWorld.getWorld().addRigidBody(groundBody);
     }
 
     @Override
@@ -206,7 +168,7 @@ public class MainClass extends ApplicationAdapter {
         float deltaTime = Gdx.graphics.getDeltaTime();
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
-            worldDebug = !worldDebug;
+            BulletWorld.DEBUG = !BulletWorld.DEBUG;
         }
 
         camera.update();
@@ -214,29 +176,23 @@ public class MainClass extends ApplicationAdapter {
             cameraControl.update();
         }
 
-        if(imGuiRenderer != null && worldDebug) {
+        if(imGuiRenderer != null && BulletWorld.DEBUG) {
             imGuiRenderer.begin();
             imGuiRenderer.renderVehicle(vehicle);
         }
 
         vehicle.update();
 
+        // Update camera position
         Vector3 vehiclePosition = vehicle.getVehiclePosition();
-
         camera.position.x = vehiclePosition.x;
         camera.position.z = vehiclePosition.z + 20;
 
         sceneManager.update(deltaTime);
         sceneManager.render();
+        bulletWorld.render(camera);
 
-        world.stepSimulation(Gdx.graphics.getDeltaTime());
-        if(worldDebug) {
-            debugDrawer.begin(camera);
-            world.debugDrawWorld();
-            debugDrawer.end();
-        }
-
-        if(imGuiRenderer != null && worldDebug) {
+        if(imGuiRenderer != null && BulletWorld.DEBUG) {
             imGuiRenderer.end();
         }
     }
@@ -249,12 +205,9 @@ public class MainClass extends ApplicationAdapter {
     @Override
     public void dispose() {
         sceneManager.dispose();
-
-        world.dispose();
-        collisionConfiguration.dispose();
-        dispatcher.dispose();
-        broadphase.dispose();
-        solver.dispose();
-        debugDrawer.dispose();
+        bulletWorld.dispose();
+        if(imGuiRenderer != null) {
+            imGuiRenderer.dispose();
+        }
     }
 }

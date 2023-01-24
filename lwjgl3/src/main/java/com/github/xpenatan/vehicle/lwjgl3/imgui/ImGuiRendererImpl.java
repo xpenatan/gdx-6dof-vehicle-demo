@@ -49,4 +49,10 @@ public class ImGuiRendererImpl implements ImGuiRenderer {
         ImGui6DofSpring2Constraint.render("Back Left Wheel", vehicle.backLeftConstraint);
         ImGui6DofSpring2Constraint.render("Back Right Wheel", vehicle.backRightConstraint);
     }
+
+    @Override
+    public void dispose() {
+        impl.dispose();
+        ImGui.dispose();
+    }
 }

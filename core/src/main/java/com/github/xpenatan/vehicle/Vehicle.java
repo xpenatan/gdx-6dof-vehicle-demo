@@ -40,52 +40,68 @@ public class Vehicle {
     public btGeneric6DofSpring2Constraint backLeftConstraint;
     public btGeneric6DofSpring2Constraint backRightConstraint;
 
+    private boolean isUpBeenPressed = false;
+    private boolean isDownBeenPressed = false;
+    private boolean isLeftBeenPressed = false;
+    private boolean isRightBeenPressed = false;
+    private boolean isLeftRearBeenPressed = false;
+    private boolean isRightRearBeenPressed = false;
+    private boolean isUpBeenReleased = false;
+    private boolean isDownBeenReleased = false;
+    private boolean isLeftBeenReleased = false;
+    private boolean isRightBeenReleased = false;
+    private boolean isLeftRearBeenReleased = false;
+    private boolean isRightRearBeenReleased = false;
+
     public float enginePower = 60f;
     public float wheelForceLimit = 10000;
     public float steerForce = 100;
     public float wheelMass = 300f;
     public float bodyMass = 4000;
     public float wheelFriction = 1;
+    public float frontStiffness = 10000f;
+    public float backStiffness = 8000;
+    public float damping = 4000f;
 
     private Vector3 vehiclePosition = new Vector3();
 
     public Vector3 getVehiclePosition() {
-        bodyModelInstance.transform.getTranslation(vehiclePosition);
+        Matrix4 transform = bodyModelInstance.transform;
+        transform.getTranslation(vehiclePosition);
         return vehiclePosition;
     }
 
     public void createModel(btDynamicsWorld world, SceneManager sceneManager) {
-
-
         SceneAsset sceneAsset = new GLBLoader().load(Gdx.files.internal("models/vehicle/glTF/VehicleDemo6DOF.glb"));
         Scene bodyScene = new Scene(sceneAsset.scene);
-
-        bodyModelInstance = bodyScene.modelInstance;
-        bodyModelInstance.nodes.removeIndex(1);
-        bodyModelInstance.transform.translate(0, 1,0);
-
-        Node bodyNode = bodyModelInstance.nodes.get(0);
-        bodyNode.translation.set(0, 0.6f,-0.5f);
-        bodyModelInstance.calculateTransforms();
-
         Scene frontLWheel = getWheel(sceneAsset);
         Scene frontRWheel = getWheel(sceneAsset);
         Scene backLWheel = getWheel(sceneAsset);
         Scene backRWheel = getWheel(sceneAsset);
 
+        // Get ModelInstance from Scene
+        bodyModelInstance = bodyScene.modelInstance;
         wheelFrontLModelInstance = frontLWheel.modelInstance;
         wheelFrontRModelInstance = frontRWheel.modelInstance;
         wheelBackLModelInstance = backLWheel.modelInstance;
         wheelBackRModelInstance = backRWheel.modelInstance;
 
+        // Vehicle model contains 1 body and 1 vehicle. Remove the wheel node and move body a bit its y position.
+        bodyModelInstance.nodes.removeIndex(1);
+        bodyModelInstance.transform.translate(0, 1,0);
+        Node bodyNode = bodyModelInstance.nodes.get(0);
+        bodyNode.translation.set(0, 0.6f,-0.5f);
+        bodyModelInstance.calculateTransforms();
+
+        // Translate and rotate the wheels to be the same as in godot.
         wheelFrontLModelInstance.transform.translate(1.414f, 0.85f, 1.468f);
         wheelFrontRModelInstance.transform.translate(-1.414f, 0.85f, 1.468f);
         wheelBackLModelInstance.transform.translate(1.35f, 0.85f, -1.89f);
         wheelBackRModelInstance.transform.translate(-1.35f, 0.85f, -1.89f);
-
         wheelFrontRModelInstance.nodes.get(0).globalTransform.rotate(Vector3.Y, -180);
         wheelBackRModelInstance.nodes.get(0).globalTransform.rotate(Vector3.Y, -180);
 
+        // Add the edited models to the scene manager
         sceneManager.addScene(bodyScene);
         sceneManager.addScene(frontLWheel);
         sceneManager.addScene(frontRWheel);
@@ -101,12 +117,14 @@ public class Vehicle {
         btCompoundShape compoundShape = new btCompoundShape();
         compoundShape.addChildShape(bodyNode.localTransform, shape);
         compoundShape.calculateLocalInertia(bodyMass, TEMP.setZero());
-        vehicleBody = new btRigidBody(bodyMass, new TestMotionState(bodyModelInstance.transform), compoundShape, TEMP);
+        vehicleBody = new btRigidBody(bodyMass, new MotionState(bodyModelInstance.transform), compoundShape, TEMP);
         world.addRigidBody(vehicleBody);
+
+        // Wheel size
 
         float height = 1.13f;
         float radius = 0.84f;
-
+        // Had to look in godot source to see what height and radius was doing behind the scene.
         Vector3 wheelSize = new Vector3(radius, height / 2.0f, radius);
 
         //Create Front Left Wheel Body
@@ -117,7 +135,7 @@ public class Vehicle {
         wheelFrontLShape.setMargin(0.4f);
         wheelFLCompoundShape.addChildShape(wheelFL, wheelFrontLShape);
         wheelFLCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
-        wheelFrontLBody = new btRigidBody(wheelMass, new TestMotionState(wheelFrontLModelInstance.transform), wheelFLCompoundShape, TEMP);
+        wheelFrontLBody = new btRigidBody(wheelMass, new MotionState(wheelFrontLModelInstance.transform), wheelFLCompoundShape, TEMP);
         wheelFrontLBody.setFriction(wheelFriction);
         world.addRigidBody(wheelFrontLBody);
 
@@ -129,7 +147,7 @@ public class Vehicle {
         wheelFrontRShape.setMargin(0.4f);
         wheelFRCompoundShape.addChildShape(wheelFR, wheelFrontRShape);
         wheelFRCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
-        wheelFrontRBody = new btRigidBody(wheelMass, new TestMotionState(wheelFrontRModelInstance.transform), wheelFRCompoundShape, TEMP);
+        wheelFrontRBody = new btRigidBody(wheelMass, new MotionState(wheelFrontRModelInstance.transform), wheelFRCompoundShape, TEMP);
         wheelFrontRBody.setFriction(wheelFriction);
         world.addRigidBody(wheelFrontRBody);
 
@@ -141,7 +159,7 @@ public class Vehicle {
         wheelBackLShape.setMargin(0.4f);
         wheelBLCompoundShape.addChildShape(wheelBL, wheelBackLShape);
         wheelBLCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
-        wheelBackLBody = new btRigidBody(wheelMass, new TestMotionState(wheelBackLModelInstance.transform), wheelBLCompoundShape, TEMP);
+        wheelBackLBody = new btRigidBody(wheelMass, new MotionState(wheelBackLModelInstance.transform), wheelBLCompoundShape, TEMP);
         wheelBackLBody.setFriction(wheelFriction);
         world.addRigidBody(wheelBackLBody);
 
@@ -153,9 +171,19 @@ public class Vehicle {
         wheelBackRShape.setMargin(0.4f);
         wheelBRCompoundShape.addChildShape(wheelBR, wheelBackRShape);
         wheelBRCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
-        wheelBackRBody = new btRigidBody(wheelMass, new TestMotionState(wheelBackRModelInstance.transform), wheelBRCompoundShape, TEMP);
+        wheelBackRBody = new btRigidBody(wheelMass, new MotionState(wheelBackRModelInstance.transform), wheelBRCompoundShape, TEMP);
         wheelBackRBody.setFriction(wheelFriction);
         world.addRigidBody(wheelBackRBody);
+
+        initConstraintValues(world);
+
+        steer(0f);
+        rearSteer(0f);
+        enableMotor(true);
+    }
+
+    private void initConstraintValues(btDynamicsWorld world) {
+        // Create 6dof constraints.
 
         Matrix4 mat = new Matrix4();
         frontLeftConstraint = new btGeneric6DofSpring2Constraint(vehicleBody, wheelFrontLBody, new Matrix4(wheelFrontLModelInstance.transform).translate(0, -1, 0), mat);
@@ -170,19 +198,12 @@ public class Vehicle {
         backRightConstraint = new btGeneric6DofSpring2Constraint(vehicleBody, wheelBackRBody, new Matrix4(wheelBackRModelInstance.transform).translate(0, -1, 0), mat);
         world.addConstraint(backRightConstraint, true);
 
-        initConstraintValues();
-        steer(0f);
-        rearSteer(0f);
-        enableMotor(true);
-
+        // Scale a bit the constraint debug lines. Default is too small.
         float debugSize = 1.4f;
         frontLeftConstraint.setDbgDrawSize(debugSize);
         frontRightConstraint.setDbgDrawSize(debugSize);
         backLeftConstraint.setDbgDrawSize(debugSize);
         backRightConstraint.setDbgDrawSize(debugSize);
-    }
-
-    private void initConstraintValues() {
 
         frontLeftConstraint.enableMotor(4, true);
         frontRightConstraint.enableMotor(4, true);
@@ -209,10 +230,14 @@ public class Vehicle {
             backLeftConstraint.setLimit(i, 0f, 0f);
             backRightConstraint.setLimit(i, 0f, 0f);
         }
+
+        // AngularX limit
         frontLeftConstraint.setLimit(3, 1, -1f);
         frontRightConstraint.setLimit(3, 1, -1f);
         backLeftConstraint.setLimit(3, 1, -1f);
         backRightConstraint.setLimit(3, 1, -1f);
+
+        // Settings for Y axis
 
         frontLeftConstraint.setLimit(1, -0.4f, 0.2f);
         frontRightConstraint.setLimit(1, -0.4f, 0.2f);
@@ -223,10 +248,6 @@ public class Vehicle {
         frontRightConstraint.enableSpring(1, true);
         backLeftConstraint.enableSpring(1, true);
         backRightConstraint.enableSpring(1, true);
-
-        float frontStiffness = 10000f;
-        float backStiffness = 8000;
-        float damping = 4000f;
 
         frontLeftConstraint.setStiffness(1, frontStiffness);
         frontLeftConstraint.setDamping(1, damping);
@@ -241,42 +262,26 @@ public class Vehicle {
         backRightConstraint.setStiffness(1, backStiffness);
         backRightConstraint.setDamping(1, damping);
         backRightConstraint.setEquilibriumPoint(1, -1);
-
     }
 
     private Scene getWheel(SceneAsset sceneAsset) {
         Scene wheelScene = new Scene(sceneAsset.scene);
         ModelInstance wheelModelInstance = wheelScene.modelInstance;
+
+        // Vehicle model contains 1 body and 1 vehicle. Remove the body node and reset its center point
         wheelModelInstance.nodes.removeIndex(0);
         wheelModelInstance.nodes.get(0).localTransform.idt();
         wheelModelInstance.nodes.get(0).globalTransform.idt();
         return wheelScene;
     }
 
-    boolean isUpBeenPressed = false;
-    boolean isDownBeenPressed = false;
-    boolean isLeftBeenPressed = false;
-    boolean isRightBeenPressed = false;
-    boolean isLeftRearBeenPressed = false;
-    boolean isRightRearBeenPressed = false;
-
-    boolean isUpBeenReleased = false;
-    boolean isDownBeenReleased = false;
-    boolean isLeftBeenReleased = false;
-    boolean isRightBeenReleased = false;
-    boolean isLeftRearBeenReleased = false;
-    boolean isRightRearBeenReleased = false;
-
     public void update() {
-
-
         boolean isUpPressed = Gdx.input.isKeyPressed(Input.Keys.W);
         boolean isDownPressed = Gdx.input.isKeyPressed(Input.Keys.S);
         boolean isLeftPressed = Gdx.input.isKeyPressed(Input.Keys.A);
         boolean isRightPressed = Gdx.input.isKeyPressed(Input.Keys.D);
         boolean isLeftRearPressed = Gdx.input.isKeyPressed(Input.Keys.Q);
         boolean isRightRearPressed = Gdx.input.isKeyPressed(Input.Keys.E);
-
 
         if(isUpBeenPressed && !isUpPressed) {
             isUpBeenReleased = true;

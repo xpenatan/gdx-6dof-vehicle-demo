@@ -9,4 +9,5 @@ public interface ImGuiRenderer {
     void end();
     InputMultiplexer getInput();
     void renderVehicle(Vehicle vehicle);
+    void dispose();
 }
