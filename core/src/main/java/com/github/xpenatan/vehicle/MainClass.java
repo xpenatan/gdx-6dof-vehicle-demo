@@ -205,7 +205,7 @@ public class MainClass extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
             worldDebug = !worldDebug;
         }
 
