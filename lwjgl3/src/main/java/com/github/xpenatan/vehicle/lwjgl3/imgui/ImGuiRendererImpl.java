@@ -3,9 +3,12 @@ package com.github.xpenatan.vehicle.lwjgl3.imgui;
 import com.badlogic.gdx.InputMultiplexer;
 import com.github.xpenatan.imgui.core.ImDrawData;
 import com.github.xpenatan.imgui.core.ImGui;
+import com.github.xpenatan.imgui.core.ImGuiBoolean;
+import com.github.xpenatan.imgui.core.ImGuiFloat;
 import com.github.xpenatan.imgui.core.enums.ImGuiConfigFlags;
 import com.github.xpenatan.imgui.gdx.ImGuiGdxImpl;
 import com.github.xpenatan.imgui.gdx.ImGuiGdxInputMultiplexer;
+import com.github.xpenatan.vehicle.BulletWorld;
 import com.github.xpenatan.vehicle.Vehicle;
 import com.github.xpenatan.vehicle.imgui.ImGuiRenderer;
 
@@ -13,6 +16,14 @@ public class ImGuiRendererImpl implements ImGuiRenderer {
 
     private ImGuiGdxImpl impl;
     private ImGuiGdxInputMultiplexer input;
+
+    private final ImGuiBoolean frontLeftWheel = new ImGuiBoolean();
+    private final ImGuiBoolean frontRightWheel = new ImGuiBoolean();
+    private final ImGuiBoolean backLeftWheel = new ImGuiBoolean();
+    private final ImGuiBoolean backRightWheel = new ImGuiBoolean();
+
+    private final ImGuiBoolean TEMP_BOOL = new ImGuiBoolean();
+    private final ImGuiFloat TEMP = new ImGuiFloat();
 
     @Override
     public void init() {
@@ -44,10 +55,53 @@ public class ImGuiRendererImpl implements ImGuiRenderer {
 
     @Override
     public void renderVehicle(Vehicle vehicle) {
-        ImGui6DofSpring2Constraint.render("Front Left Wheel", vehicle.frontLeftConstraint);
-        ImGui6DofSpring2Constraint.render("Front Right Wheel", vehicle.frontRightConstraint);
-        ImGui6DofSpring2Constraint.render("Back Left Wheel", vehicle.backLeftConstraint);
-        ImGui6DofSpring2Constraint.render("Back Right Wheel", vehicle.backRightConstraint);
+
+        ImGui.Begin("Config");
+
+        if(ImGui.Button("Reset Position")) {
+            vehicle.resetPosition();
+        }
+
+        TEMP_BOOL.setValue(BulletWorld.DEBUG);
+        if(ImGui.Checkbox("Debug", TEMP_BOOL)) {
+            BulletWorld.DEBUG = TEMP_BOOL.getValue();
+        }
+
+        ImGui.Checkbox("F. Left Wheel", frontLeftWheel);
+        ImGui.Checkbox("F. Right Wheel", frontRightWheel);
+        ImGui.Checkbox("B. Left Wheel", backLeftWheel);
+        ImGui.Checkbox("B. Right Wheel", backRightWheel);
+
+        TEMP.setValue(vehicle.wheelFriction);
+        if(ImGui.DragFloat("Wheel Friction", TEMP, 0.01f)) {
+            vehicle.setWheelFriction(TEMP.getValue());
+        }
+        TEMP.setValue(vehicle.enginePower);
+        if(ImGui.DragFloat("Engine Power", TEMP, 0.1f)) {
+            vehicle.enginePower = TEMP.getValue();
+        }
+        TEMP.setValue(vehicle.maxEnginePower);
+        if(ImGui.DragFloat("Max Engine Power", TEMP, 0.1f)) {
+            vehicle.setMaxEnginePower(TEMP.getValue());
+        }
+        TEMP.setValue(vehicle.maxTurnAngleDeg);
+        if(ImGui.DragFloat("Max Turn Angle", TEMP, 0.1f)) {
+            vehicle.maxTurnAngleDeg = TEMP.getValue();
+        }
+        ImGui.End();
+
+        if(frontLeftWheel.getValue()) {
+            ImGui6DofSpring2Constraint.render("Front Left Wheel", vehicle.frontLeftConstraint);
+        }
+        if(frontRightWheel.getValue()) {
+            ImGui6DofSpring2Constraint.render("Front Right Wheel", vehicle.frontRightConstraint);
+        }
+        if(backLeftWheel.getValue()) {
+            ImGui6DofSpring2Constraint.render("Back Left Wheel", vehicle.backLeftConstraint);
+        }
+        if(backRightWheel.getValue()) {
+            ImGui6DofSpring2Constraint.render("Back Right Wheel", vehicle.backRightConstraint);
+        }
     }
 
     @Override

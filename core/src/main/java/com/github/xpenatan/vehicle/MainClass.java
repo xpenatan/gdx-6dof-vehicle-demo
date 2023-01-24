@@ -54,7 +54,7 @@ public class MainClass extends ApplicationAdapter {
 
     private Vehicle vehicle;
 
-    private BulletWorld bulletWorld = new BulletWorld();
+    private final BulletWorld bulletWorld = new BulletWorld();
     private ImGuiRenderer imGuiRenderer;
 
     public MainClass() {
@@ -176,7 +176,7 @@ public class MainClass extends ApplicationAdapter {
             cameraControl.update();
         }
 
-        if(imGuiRenderer != null && BulletWorld.DEBUG) {
+        if(imGuiRenderer != null) {
             imGuiRenderer.begin();
             imGuiRenderer.renderVehicle(vehicle);
         }
@@ -192,7 +192,7 @@ public class MainClass extends ApplicationAdapter {
         sceneManager.render();
         bulletWorld.render(camera);
 
-        if(imGuiRenderer != null && BulletWorld.DEBUG) {
+        if(imGuiRenderer != null) {
             imGuiRenderer.end();
         }
     }

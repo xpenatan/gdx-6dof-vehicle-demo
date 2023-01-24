@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -53,7 +54,9 @@ public class Vehicle {
     private boolean isLeftRearBeenReleased = false;
     private boolean isRightRearBeenReleased = false;
 
+    public float maxTurnAngleDeg = 30;
     public float enginePower = 60f;
+    public float maxEnginePower = 10000;
     public float wheelForceLimit = 10000;
     public float steerForce = 100;
     public float wheelMass = 300f;
@@ -64,6 +67,11 @@ public class Vehicle {
     public float damping = 4000f;
 
     private Vector3 vehiclePosition = new Vector3();
+
+    private final Vector3 startFrontLeftWheelPosition = new Vector3(1.414f, 0.85f, 1.468f);
+    private final Vector3 startFrontRightWheelPosition = new Vector3(-1.414f, 0.85f, 1.468f);
+    private final Vector3 startBackLeftWheelPosition = new Vector3(1.35f, 0.85f, -1.89f);
+    private final Vector3 startBackRightWheelPosition = new Vector3(-1.35f, 0.85f, -1.89f);
 
     public Vector3 getVehiclePosition() {
         Matrix4 transform = bodyModelInstance.transform;
@@ -94,10 +102,8 @@ public class Vehicle {
         bodyModelInstance.calculateTransforms();
 
         // Translate and rotate the wheels to be the same as in godot.
-        wheelFrontLModelInstance.transform.translate(1.414f, 0.85f, 1.468f);
-        wheelFrontRModelInstance.transform.translate(-1.414f, 0.85f, 1.468f);
-        wheelBackLModelInstance.transform.translate(1.35f, 0.85f, -1.89f);
-        wheelBackRModelInstance.transform.translate(-1.35f, 0.85f, -1.89f);
+        resetPosition();
+
         wheelFrontRModelInstance.nodes.get(0).globalTransform.rotate(Vector3.Y, -180);
         wheelBackRModelInstance.nodes.get(0).globalTransform.rotate(Vector3.Y, -180);
 
@@ -136,7 +142,6 @@ public class Vehicle {
         wheelFLCompoundShape.addChildShape(wheelFL, wheelFrontLShape);
         wheelFLCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
         wheelFrontLBody = new btRigidBody(wheelMass, new MotionState(wheelFrontLModelInstance.transform), wheelFLCompoundShape, TEMP);
-        wheelFrontLBody.setFriction(wheelFriction);
         world.addRigidBody(wheelFrontLBody);
 
         //Create Front Right Wheel Body
@@ -148,7 +153,6 @@ public class Vehicle {
         wheelFRCompoundShape.addChildShape(wheelFR, wheelFrontRShape);
         wheelFRCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
         wheelFrontRBody = new btRigidBody(wheelMass, new MotionState(wheelFrontRModelInstance.transform), wheelFRCompoundShape, TEMP);
-        wheelFrontRBody.setFriction(wheelFriction);
         world.addRigidBody(wheelFrontRBody);
 
         //Create Back Left Wheel Body
@@ -160,7 +164,7 @@ public class Vehicle {
         wheelBLCompoundShape.addChildShape(wheelBL, wheelBackLShape);
         wheelBLCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
         wheelBackLBody = new btRigidBody(wheelMass, new MotionState(wheelBackLModelInstance.transform), wheelBLCompoundShape, TEMP);
-        wheelBackLBody.setFriction(wheelFriction);
+
         world.addRigidBody(wheelBackLBody);
 
         //Create Back Right Wheel Body
@@ -172,14 +176,69 @@ public class Vehicle {
         wheelBRCompoundShape.addChildShape(wheelBR, wheelBackRShape);
         wheelBRCompoundShape.calculateLocalInertia(wheelMass, TEMP.setZero());
         wheelBackRBody = new btRigidBody(wheelMass, new MotionState(wheelBackRModelInstance.transform), wheelBRCompoundShape, TEMP);
-        wheelBackRBody.setFriction(wheelFriction);
         world.addRigidBody(wheelBackRBody);
+
+        setWheelFriction(wheelFriction);
 
         initConstraintValues(world);
 
         steer(0f);
         rearSteer(0f);
         enableMotor(true);
+    }
+
+    public void resetPosition() {
+        wheelFrontLModelInstance.transform.setToTranslation(startFrontLeftWheelPosition);
+        wheelFrontRModelInstance.transform.setToTranslation(startFrontRightWheelPosition);
+        wheelBackLModelInstance.transform.setToTranslation(startBackLeftWheelPosition);
+        wheelBackRModelInstance.transform.setToTranslation(startBackRightWheelPosition);
+        bodyModelInstance.transform.idt();
+
+        if(vehicleBody == null)
+            return;
+
+        vehicleBody.setWorldTransform(bodyModelInstance.transform);
+        wheelFrontLBody.setWorldTransform(wheelFrontLModelInstance.transform);
+        wheelFrontRBody.setWorldTransform(wheelFrontRModelInstance.transform);
+        wheelBackLBody.setWorldTransform(wheelBackLModelInstance.transform);
+        wheelBackRBody.setWorldTransform(wheelBackRModelInstance.transform);
+        wheelFrontLBody.activate();
+        wheelFrontRBody.activate();
+        wheelBackRBody.activate();
+        wheelBackLBody.activate();
+
+        vehicleBody.clearForces();
+        wheelFrontLBody.clearForces();
+        wheelFrontRBody.clearForces();
+        wheelBackRBody.clearForces();
+        wheelBackLBody.clearForces();
+        TEMP.setZero();
+        vehicleBody.setAngularVelocity(TEMP);
+        wheelFrontLBody.setAngularVelocity(TEMP);
+        wheelFrontRBody.setAngularVelocity(TEMP);
+        wheelBackRBody.setAngularVelocity(TEMP);
+        wheelBackLBody.setAngularVelocity(TEMP);
+        vehicleBody.setLinearVelocity(TEMP);
+        wheelFrontLBody.setLinearVelocity(TEMP);
+        wheelFrontRBody.setLinearVelocity(TEMP);
+        wheelBackRBody.setLinearVelocity(TEMP);
+        wheelBackLBody.setLinearVelocity(TEMP);
+    }
+
+    public void setWheelFriction(float wheelFriction) {
+        this.wheelFriction = wheelFriction;
+        wheelFrontLBody.setFriction(wheelFriction);
+        wheelFrontRBody.setFriction(wheelFriction);
+        wheelBackRBody.setFriction(wheelFriction);
+        wheelBackLBody.setFriction(wheelFriction);
+    }
+
+    public void setMaxEnginePower(float maxPower) {
+        this.maxEnginePower = maxPower;
+        frontLeftConstraint.setMaxMotorForce(3, maxEnginePower);
+        frontRightConstraint.setMaxMotorForce(3, maxEnginePower);
+        backLeftConstraint.setMaxMotorForce(3, maxEnginePower);
+        backRightConstraint.setMaxMotorForce(3, maxEnginePower);
     }
 
     private void initConstraintValues(btDynamicsWorld world) {
@@ -210,10 +269,7 @@ public class Vehicle {
         backLeftConstraint.enableMotor(4, true);
         backRightConstraint.enableMotor(4, true);
 
-        frontLeftConstraint.setMaxMotorForce(3, wheelForceLimit);
-        frontRightConstraint.setMaxMotorForce(3, wheelForceLimit);
-        backLeftConstraint.setMaxMotorForce(3, wheelForceLimit);
-        backRightConstraint.setMaxMotorForce(3, wheelForceLimit);
+        setMaxEnginePower(maxEnginePower);
 
         frontLeftConstraint.setMaxMotorForce(4, wheelForceLimit);
         frontRightConstraint.setMaxMotorForce(4, wheelForceLimit);
@@ -362,7 +418,8 @@ public class Vehicle {
     }
 
     public void steer(float amount) {
-        float angle = 0.623599f; //# 30 degrees
+
+        float angle = maxTurnAngleDeg * MathUtils.degRad;
 
         if(amount < 0.1 && amount > -0.1) {
             frontLeftConstraint.setLimit(4, 0f, 0f);
@@ -389,7 +446,7 @@ public class Vehicle {
     }
 
     public void rearSteer(float amount) {
-        float angle = 0.523599f; //# 30 degrees
+        float angle = maxTurnAngleDeg * MathUtils.degRad;
 
         if(amount < 0.1 && amount > -0.1) {
             backLeftConstraint.setLimit(4, 0f, 0f);
