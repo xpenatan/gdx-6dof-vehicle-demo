@@ -57,7 +57,7 @@ public class Vehicle {
     public void createModel(btDynamicsWorld world, SceneManager sceneManager) {
 
 
-        SceneAsset sceneAsset = new GLBLoader().load(Gdx.files.internal("models/Vehicle/glTF/VehicleDemo6DOF.glb"));
+        SceneAsset sceneAsset = new GLBLoader().load(Gdx.files.internal("models/vehicle/glTF/VehicleDemo6DOF.glb"));
         Scene bodyScene = new Scene(sceneAsset.scene);
 
         bodyModelInstance = bodyScene.modelInstance;
