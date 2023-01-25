@@ -129,15 +129,15 @@ public class MainClass extends ApplicationAdapter {
     }
 
     private void createGround() {
-        Vector3 size = new Vector3(50, 1.2f, 50);
+        Vector3 size = new Vector3(1000, 1.0f, 1000);
         ModelBuilder mb = new ModelBuilder();
         mb.begin();
 
         Texture texture = new Texture(Gdx.files.internal("textures/ground.png"));
         texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         TextureRegion textureRegion = new TextureRegion(texture);
-        textureRegion.setV2(5f);
-        textureRegion.setU2(5f);
+        textureRegion.setV2(95f);
+        textureRegion.setU2(95f);
         Material material = new Material("material",
             PBRTextureAttribute.createBaseColorTexture(textureRegion)
         );
