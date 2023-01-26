@@ -611,7 +611,7 @@ public class ImGui6DofSpring2Constraint {
     private static boolean renderTextView(Vector3 vecOut) {
         boolean ret = false;
         ImGui.PushID(childId);
-        ImGui.PushItemWidth(ImGui.GetContentRegionAvail().x/3);
+        ImGui.PushItemWidth(ImGui.GetContentRegionAvail().getX()/3);
         TMP_FLOAT_01.setValue(vecOut.x);
         if(ImGui.DragFloat("##edX", TMP_FLOAT_01, DRAG_PRECISION, 0, 0, floatXFormat)) {
             vecOut.x = TMP_FLOAT_01.getValue();
