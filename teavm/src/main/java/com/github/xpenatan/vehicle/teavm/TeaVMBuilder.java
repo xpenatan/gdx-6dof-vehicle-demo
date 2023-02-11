@@ -16,7 +16,7 @@ public class TeaVMBuilder {
         teaBuildConfiguration.assetsPath.add(new File("../assets"));
         teaBuildConfiguration.webappPath = new File("build/dist").getCanonicalPath();
         // You can switch this setting during development:
-        teaBuildConfiguration.obfuscate = true;
+        teaBuildConfiguration.obfuscate = false;
 
         // Register any extra classpath assets here:
         // teaBuildConfiguration.additionalAssetsClasspathFiles.add("com/github/xpenatan/vehicle/asset.extension");

@@ -1,4 +1,4 @@
-package com.github.xpenatan.vehicle.lwjgl3.imgui;
+package com.github.xpenatan.vehicle.imgui;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btGeneric6DofSpring2Constraint;

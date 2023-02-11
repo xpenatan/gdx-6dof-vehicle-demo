@@ -1,5 +1,7 @@
-package com.github.xpenatan.vehicle.lwjgl3.imgui;
+package com.github.xpenatan.vehicle.imgui;
 
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.github.xpenatan.imgui.core.ImDrawData;
 import com.github.xpenatan.imgui.core.ImGui;
@@ -17,17 +19,29 @@ public class ImGuiRendererImpl implements ImGuiRenderer {
     private ImGuiGdxImpl impl;
     private ImGuiGdxInputMultiplexer input;
 
-    private final ImGuiBoolean frontLeftWheel = new ImGuiBoolean();
-    private final ImGuiBoolean frontRightWheel = new ImGuiBoolean();
-    private final ImGuiBoolean backLeftWheel = new ImGuiBoolean();
-    private final ImGuiBoolean backRightWheel = new ImGuiBoolean();
+    private ImGuiBoolean frontLeftWheel;
+    private ImGuiBoolean frontRightWheel;
+    private ImGuiBoolean backLeftWheel;
+    private ImGuiBoolean backRightWheel;
 
-    private final ImGuiBoolean TEMP_BOOL = new ImGuiBoolean();
-    private final ImGuiFloat TEMP = new ImGuiFloat();
+    private ImGuiBoolean TEMP_BOOL;
+    private ImGuiFloat TEMP;
 
     @Override
     public void init() {
         ImGui.init();
+
+        frontLeftWheel = new ImGuiBoolean();
+        frontRightWheel = new ImGuiBoolean();
+        backLeftWheel = new ImGuiBoolean();
+        backRightWheel = new ImGuiBoolean();
+        TEMP_BOOL = new ImGuiBoolean();
+        TEMP = new ImGuiFloat();
+
+        if(Gdx.app.getType() == Application.ApplicationType.WebGL) {
+            // Not possible to have ini filename with webgl
+            ImGui.GetIO().setIniFilename(null);
+        }
 
         ImGui.GetIO().SetConfigFlags(ImGuiConfigFlags.DockingEnable);
         ImGui.GetIO().SetDockingFlags(false, true, false, false);

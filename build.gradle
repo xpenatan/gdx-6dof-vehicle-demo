@@ -18,10 +18,10 @@ allprojects {
   apply plugin: 'eclipse'
   apply plugin: 'idea'
 
-//  configurations.all {
-//    // Check for updates every build
-//    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-//  }
+  configurations.all {
+    // Check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+  }
 }
 
 configure(subprojects) {

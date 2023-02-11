@@ -23,6 +23,7 @@ import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.linearmath.btDefaultMotionState;
 import com.github.xpenatan.vehicle.imgui.ImGuiRenderer;
+import com.github.xpenatan.vehicle.imgui.ImGuiRendererImpl;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRFloatAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
@@ -58,10 +59,7 @@ public class MainClass extends ApplicationAdapter {
     private ImGuiRenderer imGuiRenderer;
 
     public MainClass() {
-    }
-
-    public MainClass(ImGuiRenderer imGuiRenderer) {
-        this.imGuiRenderer = imGuiRenderer;
+        this.imGuiRenderer = new ImGuiRendererImpl();
     }
 
     @Override

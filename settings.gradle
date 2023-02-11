@@ -1,1 +1,9 @@
 include 'lwjgl3', 'core', 'teavm'
+
+
+includeBuild('D:\\Dev\\Projects\\java\\jDear-imgui') {
+    dependencySubstitution {
+        substitute module('com.github.xpenatan.jDear-Imgui:core') with project(':imgui:imgui-core:imgui-core')
+        substitute module('com.github.xpenatan.jDear-Imgui:core-teavm') with project(':imgui:imgui-core:imgui-core-teavm')
+    }
+}

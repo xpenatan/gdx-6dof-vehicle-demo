@@ -3,7 +3,7 @@ package com.github.xpenatan.vehicle.lwjgl3;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.github.xpenatan.vehicle.MainClass;
-import com.github.xpenatan.vehicle.lwjgl3.imgui.ImGuiRendererImpl;
+import com.github.xpenatan.vehicle.imgui.ImGuiRendererImpl;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -12,7 +12,7 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new MainClass(new ImGuiRendererImpl()), getDefaultConfiguration());
+        return new Lwjgl3Application(new MainClass(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
