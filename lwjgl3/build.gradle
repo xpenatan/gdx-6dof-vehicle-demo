@@ -20,7 +20,6 @@ else {
 sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
 mainClassName = 'com.github.xpenatan.vehicle.lwjgl3.Lwjgl3Launcher'
 eclipse.project.name = appName + '-lwjgl3'
-sourceCompatibility = 1.8
 
 dependencies {
   implementation project(':core')
