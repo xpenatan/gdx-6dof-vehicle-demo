@@ -6,6 +6,6 @@ dependencies {
 //  api "com.badlogicgames.gdx:gdx-bullet:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.github.mgsx-dev.gdx-gltf:core:master-SNAPSHOT"
-  implementation "com.github.xpenatan.jDear-Imgui:core:$jDearImguiVersion"
-  implementation "com.github.xpenatan.jDear-Imgui:gdx:$jDearImguiVersion"
+  implementation "com.github.xpenatan.gdx-imgui:core:$jDearImguiVersion"
+  implementation "com.github.xpenatan.gdx-imgui:gdx:$jDearImguiVersion"
 }

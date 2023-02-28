@@ -25,9 +25,9 @@ dependencies {
   implementation project(':core')
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
 //  implementation "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-desktop"
-  implementation "com.github.xpenatan.gdx-teavm:gdx-bullet-platform:$project.gdxTeaVMVersion:natives-desktop"
+  implementation "com.github.xpenatan.gdx-teavm:gdx-bullet-desktop:$project.gdxTeaVMVersion"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-  implementation "com.github.xpenatan.jDear-Imgui:core-platform:$jDearImguiVersion:natives-desktop"
+  implementation "com.github.xpenatan.gdx-imgui:core-desktop:$jDearImguiVersion"
 }
 
 def os = System.properties['os.name'].toLowerCase()

@@ -15,7 +15,7 @@ eclipse.project.name = appName + '-teavm'
 dependencies {
   implementation "com.github.xpenatan.gdx-teavm:backend-teavm:$gdxTeaVMVersion"
   implementation "com.github.xpenatan.gdx-teavm:gdx-bullet-teavm:$gdxTeaVMVersion"
-  implementation "com.github.xpenatan.jDear-Imgui:core-teavm:$jDearImguiVersion"
+  implementation "com.github.xpenatan.gdx-imgui:core-teavm:$jDearImguiVersion"
   implementation project(':core')
 
 }
